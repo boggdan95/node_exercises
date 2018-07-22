@@ -16,6 +16,8 @@ function randomInt (low, high) {
 function game(value){
   if (value === 1){
     console.log("Juego 1");
-    socket.emit('entrenamiento1',randomInt(10,25));
+    var number = randomInt(10,20)
+    socket.emit('entrenamiento1', number);
+    console.log(number);
   }
 }

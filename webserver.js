@@ -44,6 +44,16 @@ function ledOnOff(led,status) {
     }
 }
 
+function on(){
+  var status = 1;
+  console.log('on');
+}
+
+function off(){
+  var status = 0;
+  console.log('off');
+}
+
 io.sockets.on('connection', function (socket) {// WebSocket Connection
   console.log('Conexion iniciada');
   //var lightvalue1 = 0; //static variable for current status
@@ -61,30 +71,72 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
 
   //Status from the Webpage / Client
   socket.on('entrenamiento1', function(data) { //get light switch status0000000000100 f0r0om client
-    const totalTime = 90000;
-    const noTry = data;
-    const stepTime = Math.floor(totalTime/noTry);
-    console.log(stepTime);
-    var valueLed = 0;
-    var timeStart = Date.now();
-    const timeTraining = timeStart + totalTime;
+    const totalTime = 90000; //Tiempo total del ejercicio
+    const noTry = data; //Numero de repeticiones
+    const stepTime = Math.floor(totalTime/noTry); //Tiempo maximo en el que se debe activar/desactivar una salida
+    var valueLed = 0; //Estado de la salida
+    var activationTime = [];
+    var desactivationTime = [];
+    var activationTimeArray = [];
+    var hitmissArray = [];
 
-    while (Date.now() <= timeTraining) {
-      var timeActual = timeStart + 1000;
-      var timeActivation = getRandomInt(timeActual,timeActual+(stepTime-3000));
-      while (Date.now() >= timeActivation) {
-        console.log('Salida ON');
-        valueLed = 1;
-        ledOnOff(LED,valueLed);
-        pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
-             if (err) {console.error('There was an error', err); //output error message to console
-             return;
-           }
-           valueLed = value;
-           ledOnOff(LED,valueLed);
-        });
-      }
+    for (var i = 0; i < noTry; i++) {
+      activationTime.push(getRandomInt(0,(stepTime-3000))+(i*stepTime));
     }
+    for (var i = 0; i < (noTry-1); i++) {
+      desactivationTime.push((i*stepTime)+stepTime);
+    }
+    desactivationTime.push(totalTime-10); //Se apaga 0.1 segundo antes que termine el entrenamiento
+
+    // for (var i = 0; i < activationTime.length; i++) {
+    //   console.log(activationTime[i]);
+    //   console.log(desactivationTime[i]);
+    // }
+
+    for (var i = 0; i < activationTime.length; i++) {
+      setTimeout(function () {
+        console.log('on');
+      },activationTime[i]);
+    }
+    for (var i = 0; i < desactivationTime.length; i++) {
+         setTimeout(function () {
+           console.log('off');
+         },desactivationTime[i]);
+       }
+
+    // var attempt = 0; //Numero de intento
+    // var timeStart = Date.now();
+    // const timeTraining = timeStart + totalTime;
+    // while (Date.now() <= timeTraining) {
+    //
+    //
+    // }
+
+
+
+
+    // while (Date.now() <= timeTraining && attempt =! noTry) {
+    //
+    //   var timeActivation = timeStart + ramdonTime.[attempt];
+    //   //var timeActual = timeStart + 1000;
+    //   //var timeActivation = getRandomInt(timeActual,timeActual+(stepTime-3000));
+    //   while (Date.now() >= timeActivation) {
+    //     console.log('Salida ON');
+    //     valueLed = 1;
+    //     ledOnOff(LED,valueLed);
+    //     pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
+    //          if (err) {console.error('There was an error', err); //output error message to console
+    //          return;
+    //        }
+    //        valueLed = value;
+    //        ledOnOff(LED,valueLed);
+    //        if (valueLed != 1) {
+    //          var timeDesactivation = Date.now();
+    //        }
+    //     });
+    //   }
+    //
+    // }
 
     console.log('Tiempo concluido');
 

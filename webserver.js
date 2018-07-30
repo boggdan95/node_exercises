@@ -4,7 +4,7 @@ var path = require('path');
 var http = require('http').Server(app);
 var io = require('socket.io')(http) //require socket.io module and pass the http object (server)
 var rn = require('random-number');
-
+var status = 0
 
 
 
@@ -34,23 +34,26 @@ http.listen(3000, function(){
   console.log('listening on :3000');
 });
 
+//******************************************************************************
+//******************************************************************************
+
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function ledOnOff(led,status) {
-  if (status != led.readSync()) { //only change LED if status has changed
-         led.writeSync(status); //turn LED on or off
-    }
-}
-
 function on(){
-  var status = 1;
+  // status = 1;
+  // if (status != led.readSync()) { //only change LED if status has changed
+  //        led.writeSync(status); //turn LED on or off
+  //   }
   console.log('on');
 }
 
 function off(){
-  var status = 0;
+  // status = 0;
+  // if (status != led.readSync()) { //only change LED if status has changed
+  //        led.writeSync(status); //turn LED on or off
+  //   }
   console.log('off');
 }
 
@@ -69,15 +72,17 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
   // });
 
 
-  //Status from the Webpage / Client
-  socket.on('entrenamiento1', function(data) { //get light switch status0000000000100 f0r0om client
+  //****************************************************************************
+  //****************************************************************************
+
+  socket.on('entrenamiento1', function(data) {
     const totalTime = 90000; //Tiempo total del ejercicio
     const noTry = data; //Numero de repeticiones
     const stepTime = Math.floor(totalTime/noTry); //Tiempo maximo en el que se debe activar/desactivar una salida
     var valueLed = 0; //Estado de la salida
     var activationTime = [];
     var desactivationTime = [];
-    var activationTimeArray = [];
+    var reactionTime = [];
     var hitmissArray = [];
 
     for (var i = 0; i < noTry; i++) {
@@ -92,107 +97,139 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
     //   console.log(activationTime[i]);
     //   console.log(desactivationTime[i]);
     // }
-
+    var timeOFF;
     for (var i = 0; i < activationTime.length; i++) {
       setTimeout(function () {
-        console.log('on');
+        on();
+        var onTime = Date.now();
+        // pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
+        //      if (err) {console.error('There was an error', err); //output error message to console
+        //      return err;
+        //    }
+        //    if (value != status) {
+        //      off();
+        //      clearTimeOut(timeOFF);
+        //      var reaction = Date.now();
+        //      reactionTime.push(reaction-onTime);
+        //      hitmissArray.push('Hit');
+        //    }
+        // });
       },activationTime[i]);
     }
-    for (var i = 0; i < desactivationTime.length; i++) {
-         setTimeout(function () {
-           console.log('off');
+   for (var i = 0; i < desactivationTime.length; i++) {
+         timeOFF = setTimeout(function () {
+           off();
+           // reactionTime.push('--');
+           // hitmissArray.push('Miss');
          },desactivationTime[i]);
        }
 
-    // var attempt = 0; //Numero de intento
-    // var timeStart = Date.now();
-    // const timeTraining = timeStart + totalTime;
-    // while (Date.now() <= timeTraining) {
-    //
-    //
-    // }
+       console.log('Tiempo concluido');
 
 
-
-
-    // while (Date.now() <= timeTraining && attempt =! noTry) {
-    //
-    //   var timeActivation = timeStart + ramdonTime.[attempt];
-    //   //var timeActual = timeStart + 1000;
-    //   //var timeActivation = getRandomInt(timeActual,timeActual+(stepTime-3000));
-    //   while (Date.now() >= timeActivation) {
-    //     console.log('Salida ON');
-    //     valueLed = 1;
-    //     ledOnOff(LED,valueLed);
-    //     pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
-    //          if (err) {console.error('There was an error', err); //output error message to console
-    //          return;
-    //        }
-    //        valueLed = value;
-    //        ledOnOff(LED,valueLed);
-    //        if (valueLed != 1) {
-    //          var timeDesactivation = Date.now();
-    //        }
-    //     });
-    //   }
-    //
-    // }
-
-    console.log('Tiempo concluido');
-
-    // var intervalMain = setInterval(function () {
-    //     i_total = i_total + 1;
-    //     console.log(i_total);
-    //     if(i_total === 3000){
-    //       console.log("Tiempo completado");
-    //       clearInterval(intervalMain);
-    //     }
-    // }, 1);
-
-    // let gameTime = new moment.duration(totalTime);
-    // gameTime.start();
-    // var remainingTime = gameTime.getRemainingDuration();
-
-    // console.log(remainingTime);
-
-    // });
-
-    // var options = {
-    // min: 0, max: (stepTime-3), integer: true}
-    //
-    // while (no_steps =! 0) {
-    //   let step = new moment.duration(stepTime).timer(callback);
-    //   step.start();
-    //
-    //
-    //   }
-
-
-
-
-
-
-
-
-//     if (lightvalue1 != LED1.readSync()) { //only change LED if status has changed
-//       LED1.writeSync(lightvalue1); //turn LED on or off
-//     }
-//   });
-//
-//
-//    socket.on('entrenamiento2', function(data) { //get light switch status from client
-//     lightvalue2 = data;
-//     if (lightvalue2 != LED2.readSync()) { //only change LED if status has changed
-//       LED2.writeSync(lightvalue2); //turn LED on or off
-//     }
-//   });
-//    socket.on('entrenamiento3', function(data) { //get light switch status from client
-//     lightvalue3 = data;
-//     if (lightvalue3 != LED3.readSync()) { //only change LED if status has changed
-//       LED3.writeSync(lightvalue3); //turn LED on or off
-//     }
-//   });
  });
+
+    socket.on('entrenamiento2', function() {
+      const step = 10;
+      const stepTime = getRandomInt(3,5)*1000;
+      const limitTime = 500;
+      var activationTime = [];
+      var desactivationTime = [];
+      var reactionTime = [];
+      var hitmissArray = [];
+
+      for (var i = 1; i < step+1; i++) {
+        activationTime.push(i*stepTime);
+      }
+      for (var i = 0; i < step; i++) {
+        desactivationTime.push(activationTime[i]+limitTime);
+      }
+
+      for (var i = 0; i < activationTime.length; i++) {
+        console.log(activationTime[i]);
+        console.log(desactivationTime[i]);
+      }
+
+      var timeOFF;
+      for (var i = 0; i < activationTime.length; i++) {
+        setTimeout(function () {
+          on();
+          var onTime = Date.now();
+          // pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
+          //      if (err) {console.error('There was an error', err); //output error message to console
+          //      return err;
+          //    }
+          //    if (value != status) {
+          //      off();
+          //      clearTimeOut(timeOFF);
+          //      var reaction = Date.now();
+          //      reactionTime.push(reaction-onTime);
+          //      hitmissArray.push('Hit');
+          //    }
+          // });
+        },activationTime[i]);
+      }
+     for (var i = 0; i < desactivationTime.length; i++) {
+           timeOFF = setTimeout(function () {
+             off();
+             // reactionTime.push('--');
+             // hitmissArray.push('Miss');
+           },desactivationTime[i]);
+         }
+
+ });
+
+
+ socket.on('entrenamiento3', function() {
+   const step = 10;
+   const stepTime = 3000;
+   const limitTime = 1000;
+   var activationTime = [];
+   var desactivationTime = [];
+   var reactionTime = [];
+   var hitmissArray = [];
+
+   for (var i = 1; i < step+1; i++) {
+     activationTime.push(i*stepTime);
+   }
+   for (var i = 0; i < step; i++) {
+     desactivationTime.push(activationTime[i]+limitTime);
+   }
+
+   for (var i = 0; i < activationTime.length; i++) {
+     console.log(activationTime[i]);
+     console.log(desactivationTime[i]);
+   }
+
+   var timeOFF;
+   for (var i = 0; i < activationTime.length; i++) {
+     setTimeout(function () {
+       on();
+       var onTime = Date.now();
+       // pushButton.watch(function (err, value) { //Watch for hardware interrupts on pushButton
+       //      if (err) {console.error('There was an error', err); //output error message to console
+       //      return err;
+       //    }
+       //    if (value != status) {
+       //      off();
+       //      clearTimeOut(timeOFF);
+       //      var reaction = Date.now();
+       //      reactionTime.push(reaction-onTime);
+       //      hitmissArray.push('Hit');
+       //    }
+       // });
+     },activationTime[i]);
+   }
+  for (var i = 0; i < desactivationTime.length; i++) {
+        timeOFF = setTimeout(function () {
+          off();
+          // reactionTime.push('--');
+          // hitmissArray.push('Miss');
+        },desactivationTime[i]);
+      }
+
+});
+
 //
 // process.on('SIGINT', function () { //on ctrl+c
 //   LED1.writeSync(0); // Turn LED off

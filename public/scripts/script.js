@@ -20,4 +20,12 @@ function game(value){
     socket.emit('entrenamiento1', number);
     console.log(number);
   }
+  if (value === 2){
+    console.log("Juego 2");
+    socket.emit('entrenamiento2');
+  }
+  if (value === 3){
+    console.log("Juego 3");
+    socket.emit('entrenamiento3');
+  }
 }

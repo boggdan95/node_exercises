@@ -56,51 +56,6 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
     return value;
   }
 
-  function on(led_select){
-    status = 1;
-    if (led_select !== undefined){
-    if (status != led_select.readSync()) { //only change LED if status has changed
-           led_select.writeSync(status); //turn LED on or off
-      }
-    }
-    else {
-      if (status != led[0].readSync()) { //only change LED if status has changed
-             led[0].writeSync(status); //turn LED on or off
-        }
-    }
-    console.log('on');
-  }
-
-  function off(led_select){
-    status = 0;
-    if (led_select !== undefined){
-    if (status != led_select.readSync()) { //only change LED if status has changed
-           led_select.writeSync(status); //turn LED on or off
-      }
-    }
-    else {
-      if (status != led[0].readSync()) { //only change LED if status has changed
-             led[0].writeSync(status); //turn LED on or off
-        }
-    }
-    console.log('off');
-  }
-
-  function onSetTimeout(time,modulo,i) {
-  setTimeout(function() {
-    on(led[modulo[i]]);
-    onTime = Date.now();
-  }, time[i]);
-}
-
-  function offSetTimeout(time,modulo,reaction,ans,a,i) {
-    a.push(setTimeout(function () {
-      off(led[modulo[i]]);
-      reaction.push('--');
-      ans.push('Miss');
-    },time[i]));
-}
-
 //******************************************************************************
   socket.on('entrenamiento1', function(data) {
     const totalTime = 90000; //Tiempo total del ejercicio
@@ -157,52 +112,39 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
  });
 
     socket.on('entrenamiento2', function() {
-
-
-
       const step = 10;
       const stepTime = getRandomInt(3,5)*1000;
       const limitTime = 500;
-      var activationTime = [];
-      var desactivationTime = [];
-      var reactionTime = [];
-      var hitmissArray = [];
+      var activationTime = [];var desactivationTime = [];var reactionTime =[]; var hitmissArray = [];
       var status = 0;
 
-      for (var i = 1; i < step+1; i++) {
-        activationTime.push(i*stepTime);
-      }
       for (var i = 0; i < step; i++) {
+        activationTime.push((i+1)*stepTime);
         desactivationTime.push(activationTime[i]+limitTime);
         console.log(activationTime[i]);
         console.log(desactivationTime[i]);
       }
 
-      var timeOFF = [];
-      var s = 0;
-      var onTime;
-      var reaction;
+      var timeON = [];var timeOFF = [];
+      var currentState = 0;
+      var onTime;var reaction;
       for (var i = 0; i < activationTime.length; i++) {
-        setTimeout(function () {
-          s = s + i;
-          console.log("yyy", s);
+        timeON.push(setTimeout(function () {
+          currentState = currentState + i;
           status = changeState(led[0],1);
           onTime = Date.now();
-        },activationTime[i]);
+        },activationTime[i]));
+        timeOFF.push(setTimeout(function () {
+          status = changeState(led[0],0);
+          reactionTime.push('--');
+          hitmissArray.push('Miss');
+        },desactivationTime[i]));
       }
-     for (var i = 0; i < desactivationTime.length; i++) {
-           timeOFF.push(setTimeout(function () {
-             status = changeState(led[0],0);
-             reactionTime.push('--');
-             hitmissArray.push('Miss');
-           },desactivationTime[i]));
-     }
 
      setTimeout(function () {
        console.log('Entrenamiento terminado');
        console.log(reactionTime);
        console.log(hitmissArray);
-       s = 0;
      }, desactivationTime[desactivationTime.length-1]+2000);
 
      inputButtons[0].watch(function (err, value) { //Watch for hardware interrupts on pushButton
@@ -211,9 +153,9 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
         }
 
         if (value != status) {
-          console.log("xxx", s);
+          console.log("xxx", currentState);
           console.log('Cambio de estado');
-          clearTimeout(timeOFF[(s/10)-1]);
+          clearTimeout(timeOFF[(currentState/10)-1]);
           status = changeState(led[0],0);
           console.log('TimeOFF length', timeOFF.length);
           reaction = Date.now();
@@ -228,52 +170,56 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
    const step = 10;
    const stepTime = 3000;
    const limitTime = 1000;
-   var activationTime = [];
-   var desactivationTime = [];
-   var activationModule = [];
-   var reactionTime = [];
-   var hitmissArray = [];
+   var activationTime = [];var desactivationTime = [];var reactionTime = [];var hitmissArray = [];
+   var activateModule = [];
+   var status = 0;
 
-   for (var i = 1; i < step+1; i++) {
-     activationTime.push(i*stepTime);
-   }
    for (var i = 0; i < step; i++) {
+     activationTime.push((i+1)*stepTime);
      desactivationTime.push(activationTime[i]+limitTime);
-     activationModule.push(getRandomInt(0,2));
+     activateModule.push(getRandomInt(0,2));
    }
 
    for (var i = 0; i < activationTime.length; i++) {
-     console.log(activationTime[i]);
-     console.log(desactivationTime[i]);
-     console.log(activationModule[i]);
+     console.log(activateModule[i]);
    }
 
-   var timeOFF = [];
-   var s = 0;
-   var onTime;
-   var reaction;
+   var timeON = [];var timeOFF = [];
+   var currentState = 0;
+   var onTime;var reaction;
    for (var i = 0; i < activationTime.length; i++) {
-     // setTimeout(function () {
-     s = i;
-     //   on(led[activationModule[i]]);
-     //   onTime = Date.now();
-     // },activationTime[i]);
-     onSetTimeout(activationTime,activationModule,i);
+     onSetTimeout(i);
    }
-  for (var i = 0; i < desactivationTime.length; i++) {
-        // timeOFF.push(setTimeout(function () {
-        //   off(led[activationModule[i]]);
-        //   reactionTime.push('--');
-        //   hitmissArray.push('Miss');
-        // },desactivationTime[i]));
-    offSetTimeout(desactivationTime,activationModule,reactionTime,hitmissArray,timeOFF,i);
+   for (var i = 0; i < desactivationTime.length; i++) {
+     offSetTimeout(i);
+   }
+
+  function onSetTimeout(i) {
+    timeON.push(setTimeout(function () {
+      if (i === 0){
+        currentState = 0;
       }
+      else {
+        currentState = currentState + 1;
+      }
+      console.log('xxx', currentState);
+      status = changeState(led[activateModule[i]],1);
+      onTime = Date.now();
+    },activationTime[i]));
+  }
+
+  function offSetTimeout(i) {
+    timeOFF.push(setTimeout(function () {
+      changeState(led[activateModule[i]],0);
+      reactionTime.push('--');
+      hitmissArray.push('Miss');
+    },desactivationTime[i]));
+  }
 
       setTimeout(function () {
         console.log('Entrenamiento terminado');
         console.log(reactionTime);
         console.log(hitmissArray);
-        s = 0;
       }, desactivationTime[desactivationTime.length-1]+2000);
 
       inputButtons[0].watch(function (err, value) { //Watch for hardware interrupts on pushButton
@@ -281,8 +227,10 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
            return err;
          }
          if (value != status) {
-           off(led[0]);
-           clearTimeout(timeOFF[s]);
+           console.log('Cambio de estado');
+           console.log('zzz',currentState);
+           status = changeState(led[0],0);
+           clearTimeout(timeOFF[currentState]);
            reaction = Date.now();
            reactionTime.push(reaction-onTime);
            hitmissArray.push('Hit');
@@ -293,8 +241,10 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
            return err;
          }
          if (value != status) {
-           off(led[1]);
-           clearTimeout(timeOFF[s]);
+           console.log('Cambio de estado');
+           console.log('zzz',currentState);
+           status = changeState(led[1],0);
+           clearTimeout(timeOFF[currentState]);
            reaction = Date.now();
            reactionTime.push(reaction-onTime);
            hitmissArray.push('Hit');

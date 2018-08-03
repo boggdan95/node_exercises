@@ -61,52 +61,55 @@ io.sockets.on('connection', function (socket) {// WebSocket Connection
     const totalTime = 90000; //Tiempo total del ejercicio
     const noTry = data; //Numero de repeticiones
     const stepTime = Math.floor(totalTime/noTry); //Tiempo maximo en el que se debe activar/desactivar una salida
-    var valueLed = 0; //Estado de la salida
-    var activationTime = [];
-    var desactivationTime = [];
-    var reactionTime = [];
-    var hitmissArray = [];
+    var activationTime = [];var desactivationTime = [];var reactionTime = [];var hitmissArray = [];
+    var status = 0;
+    console.log('Cantidad', noTry);
+    console.log('Max time', stepTime);
 
     for (var i = 0; i < noTry; i++) {
       activationTime.push(getRandomInt(0,(stepTime-3000))+(i*stepTime));
-    }
-    for (var i = 0; i < (noTry-1); i++) {
       desactivationTime.push((i*stepTime)+stepTime);
     }
-    desactivationTime.push(totalTime-10); //Se apaga 0.1 segundo antes que termine el entrenamiento
+    desactivationTime[desactivationTime.length-1]=(totalTime-10); //Se apaga 0.1 segundo antes que termine el entrenamiento
 
-    // for (var i = 0; i < activationTime.length; i++) {
-    //   console.log(activationTime[i]);
-    //   console.log(desactivationTime[i]);
-    // }
-    var timeOFF;
+    var timeON = [];var timeOFF = [];
+    var currentState = 0;
+    var onTime;var reaction;
     for (var i = 0; i < activationTime.length; i++) {
-      setTimeout(function () {
-        on();
-        var onTime = Date.now();
-        inputButtons[0].watch(function (err, value) { //Watch for hardware interrupts on pushButton
-             if (err) {console.error('There was an error', err); //output error message to console
-             return err;
-           }
-           if (value != status) {
-             off();
-             clearTimeout(timeOFF);
-             var reaction = Date.now();
-             reactionTime.push(reaction-onTime);
-             hitmissArray.push('Hit');
-           }
-        });
-      },activationTime[i]);
-    }
-   for (var i = 0; i < desactivationTime.length; i++) {
-         timeOFF = setTimeout(function () {
-           off();
-           reactionTime.push('--');
-           hitmissArray.push('Miss');
-         },desactivationTime[i]);
-       }
+      timeON.push(setTimeout(function () {
+        currentState = currentState + i;
+        console.log("xxx", currentState);
+        status = changeState(led[0],1);
+        onTime = Date.now();
+      },activationTime[i]));
+      timeOFF.push(setTimeout(function () {
+        status = changeState(led[0],0);
+        reactionTime.push('--');
+        hitmissArray.push('Miss');
+      },desactivationTime[i]));
+     }
 
-       console.log('Tiempo concluido');
+     setTimeout(function () {
+       console.log('Entrenamiento terminado');
+       console.log(reactionTime);
+       console.log(hitmissArray);
+     }, desactivationTime[desactivationTime.length-1]+2000);
+
+
+       inputButtons[0].watch(function (err, value) { //Watch for hardware interrupts on pushButton
+            if (err) {console.error('There was an error', err); //output error message to console
+            return err;
+          }
+          if (value != status) {
+            console.log("yyy", currentState);
+            console.log('Cambio de estado');
+            status = changeState(led[0],0);
+            clearTimeout(timeOFF[(currentState/noTry)-1]);
+            var reaction = Date.now();
+            reactionTime.push(reaction-onTime);
+            hitmissArray.push('Hit');
+          }
+       });
 
 
  });
